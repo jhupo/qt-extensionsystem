@@ -2,7 +2,7 @@ include($$top_srcdir/library.pri)
 QT                      +=              core
 CONFIG                  +=              shared
 TEMPLATE                 =              lib
-DESTDIR                  =              $$top_builddir/bin
+DESTDIR                  =              $$top_builddir/builds/bin
 MOC_DIR                 +=              $$top_builddir/builds/libs/extensionsystem/moc
 UI_DIR                  +=              $$top_builddir/builds/libs/extensionsystem/uic
 RCC_DIR                 +=              $$top_builddir/builds/libs/extensionsystem/rcc
