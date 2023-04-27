@@ -2,11 +2,11 @@ include($$top_srcdir/library.pri)
 QT                      +=              core
 CONFIG                  +=              shared
 TEMPLATE                 =              lib
-DESTDIR                  =              $$top_builddir/builds/bin
-MOC_DIR                 +=              $$top_builddir/builds/libs/extensionsystem/moc
-UI_DIR                  +=              $$top_builddir/builds/libs/extensionsystem/uic
-RCC_DIR                 +=              $$top_builddir/builds/libs/extensionsystem/rcc
-OBJECTS_DIR             +=              $$top_builddir/builds/libs/extensionsystem/obj
+DESTDIR                  =              $$top_builddir/bin
+MOC_DIR                 +=              $$top_builddir/libs/extensionsystem/moc
+UI_DIR                  +=              $$top_builddir/libs/extensionsystem/uic
+RCC_DIR                 +=              $$top_builddir/libs/extensionsystem/rcc
+OBJECTS_DIR             +=              $$top_builddir/libs/extensionsystem/obj
 CONFIG                  -=              debug_and_release
 DEFINES                 +=              EXTENSIONSYSTEM_LIBRARY
 QMAKE_CXXFLAGS_RELEASE   =              $$QMAKE_CFLAGS_RELEASE_WITH_DEBUGINFO
