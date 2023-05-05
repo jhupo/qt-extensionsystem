@@ -35,11 +35,11 @@ namespace QtExtensionSystem {
 
             QVector<QtExtensionSystemPluginSpec *> specs()const;
             QVector<QtExtensionSystemPlugin*> plugins()const;
-            QtExtensionSystemPlugin* plugin(const QString& name)const;
+            QtExtensionSystemPluginSpec* spec(const QString& name)const;
 
             void loadPlugins();
-            void loadPlugin(QtExtensionSystemPlugin* plugin);
-            void unLoadPlugin(QtExtensionSystemPlugin* plugin);
+            void loadPlugin(QtExtensionSystemPluginSpec *spec);
+            void unLoadPlugin(QtExtensionSystemPluginSpec* spec);
 
         Q_SIGNALS:
 

@@ -23,14 +23,16 @@ namespace QtExtensionSystem {
             void loadPlugin(QtExtensionSystemPluginSpec *spec, QtExtensionSystemPluginSpec::State destState);
 
             void loadQueue(QtExtensionSystemPluginSpec *spec,
-                           QVector<QtExtensionSystemPlugin*>& plugins,
-                           QSet<QtExtensionSystemPlugin*>& visited = QSet<QtExtensionSystemPlugin*>());
+                           QVector<QtExtensionSystemPluginSpec *> &plugins,
+                           QSet<QtExtensionSystemPluginSpec *> &visited = QSet<QtExtensionSystemPluginSpec*>());
 
             void unLoadQueue(QtExtensionSystemPluginSpec *spec,
-                             QVector<QtExtensionSystemPlugin*>& plugins);
+                             QVector<QtExtensionSystemPluginSpec*>& plugins);
 
             void readPluginPaths(const QStringList& paths);
             QStringList pluginFiles(const QStringList& pluginPaths);
+
+            void resolveDependencies(QtExtensionSystemPluginSpec* spec);
 
             QtExtensionSystemPluginManager*const                q_ptr;
             QMutex                                              _mutex;
@@ -129,56 +131,54 @@ namespace QtExtensionSystem {
             return d->_pluginsSpec;
         }
 
-        QtExtensionSystemPlugin *QtExtensionSystemPluginManager::plugin(const QString &name) const
+        QtExtensionSystemPluginSpec *QtExtensionSystemPluginManager::spec(const QString &name) const
         {
             Q_D(const QtExtensionSystemPluginManager);
-            QtExtensionSystemPlugin* plugin = Q_NULLPTR;
             foreach(QtExtensionSystemPluginSpec* spec, d->_pluginsSpec)
             {
                 if(spec->displayName() == name)
-                {
-                    plugin = spec->plugin();
-                    break;
-                }
+                    return spec;
             }
-            return plugin;
+            return Q_NULLPTR;
         }
 
         void QtExtensionSystemPluginManager::loadPlugins()
         {
-
+            Q_D(QtExtensionSystemPluginManager);
+            foreach(QtExtensionSystemPluginSpec* spec, d->_pluginsSpec)
+            {
+                loadPlugin(spec);
+            }
         }
 
-        void QtExtensionSystemPluginManager::loadPlugin(QtExtensionSystemPlugin *plugin)
+        void QtExtensionSystemPluginManager::loadPlugin(QtExtensionSystemPluginSpec *spec)
         {
             Q_D(QtExtensionSystemPluginManager);
-            QVector<QtExtensionSystemPlugin*> queue;
-            d->loadQueue(plugin->pluginSpec(),queue);
-            foreach(QtExtensionSystemPlugin* pl, queue)
+            QVector<QtExtensionSystemPluginSpec*> queue;
+            d->loadQueue(spec,queue);
+            foreach(QtExtensionSystemPluginSpec* pluginSpec, queue)
             {
-                QtExtensionSystemPluginSpec* spec = pl->pluginSpec();
-                if (spec->state() == QtExtensionSystemPluginSpec::Resolved)
+                if (pluginSpec->state() == QtExtensionSystemPluginSpec::Resolved)
                 {
-                    d_ptr->loadPlugin(spec, QtExtensionSystemPluginSpec::Loaded);
-                    d_ptr->loadPlugin(spec, QtExtensionSystemPluginSpec::Initialized);
-                    d_ptr->loadPlugin(spec, QtExtensionSystemPluginSpec::Running);
+                    d_ptr->loadPlugin(pluginSpec, QtExtensionSystemPluginSpec::Loaded);
+                    d_ptr->loadPlugin(pluginSpec, QtExtensionSystemPluginSpec::Initialized);
+                    d_ptr->loadPlugin(pluginSpec, QtExtensionSystemPluginSpec::Running);
                     emit pluginsChanged();
                 }
             }
         }
 
-        void QtExtensionSystemPluginManager::unLoadPlugin(QtExtensionSystemPlugin *plugin)
+        void QtExtensionSystemPluginManager::unLoadPlugin(QtExtensionSystemPluginSpec *spec)
         {
             Q_D(QtExtensionSystemPluginManager);
-            QVector<QtExtensionSystemPlugin*> queue;
-            d->unLoadQueue(plugin->pluginSpec(),queue);
-            foreach(QtExtensionSystemPlugin* pl, queue)
+            QVector<QtExtensionSystemPluginSpec*> queue;
+            d->unLoadQueue(spec,queue);
+            foreach(QtExtensionSystemPluginSpec* pluginSpec, queue)
             {
-                QtExtensionSystemPluginSpec* spec = pl->pluginSpec();
-                if(spec->state() == QtExtensionSystemPluginSpec::Running)
+                if(pluginSpec->state() == QtExtensionSystemPluginSpec::Running)
                 {
-                    d->loadPlugin(spec,QtExtensionSystemPluginSpec::Stopped);
-                    d->loadPlugin(spec,QtExtensionSystemPluginSpec::Deleted);
+                    d->loadPlugin(pluginSpec,QtExtensionSystemPluginSpec::Stopped);
+                    d->loadPlugin(pluginSpec,QtExtensionSystemPluginSpec::Deleted);
                     emit pluginsChanged();
                 }
             }
@@ -236,7 +236,7 @@ namespace QtExtensionSystem {
             case QtExtensionSystemPluginSpec::Deleted:
             {
                 spec->d_ptr->kill();
-                spec->d_ptr->_state = QtExtensionSystemPluginSpec::Resolved;
+                resolveDependencies(spec);
                 break;
             }
             default:break;
@@ -245,21 +245,22 @@ namespace QtExtensionSystem {
 
         void QtExtensionSystemPluginManagerPrivate::loadQueue(
                 QtExtensionSystemPluginSpec *spec,
-                QVector<QtExtensionSystemPlugin*>& plugins,
-                QSet<QtExtensionSystemPlugin*>& visited)
+                QVector<QtExtensionSystemPluginSpec*>& plugins,
+                QSet<QtExtensionSystemPluginSpec*>& visited)
         {
-            if (visited.contains(spec->plugin()))
+            if (visited.contains(spec))
                 return;
-            visited.insert(spec->plugin());
+            visited.insert(spec);
             QVector<QtExtensionSystemPluginDependency> des = spec->dependencys();
             foreach(QtExtensionSystemPluginDependency iter, des) {
-                QtExtensionSystemPlugin * plugin = q_ptr->plugin(iter._name);
-                loadQueue(plugin->pluginSpec(), plugins, visited);
+                if(QtExtensionSystemPluginDependency::Required == iter._type)
+                    loadQueue(q_ptr->spec(iter._name), plugins, visited);
             }
-            plugins.push_back(spec->plugin());
+            plugins.push_back(spec);
+            resolveDependencies(spec);
         }
 
-        void QtExtensionSystemPluginManagerPrivate::unLoadQueue(QtExtensionSystemPluginSpec *spec, QVector<QtExtensionSystemPlugin *> &plugins)
+        void QtExtensionSystemPluginManagerPrivate::unLoadQueue(QtExtensionSystemPluginSpec *spec, QVector<QtExtensionSystemPluginSpec *> &plugins)
         {
             foreach(QtExtensionSystemPluginSpec* plugin, _pluginsSpec)
             {
@@ -268,10 +269,11 @@ namespace QtExtensionSystem {
                 {
                     QtExtensionSystemPluginDependency dep = deps.at(i);
                     if(dep._name == spec->displayName())
-                        unLoadQueue(plugin,plugins);
+                        if(QtExtensionSystemPluginDependency::Required == dep._type)
+                            unLoadQueue(plugin,plugins);
                 }
             }
-            plugins.append(spec->plugin());
+            plugins.append(spec);
         }
 
         void QtExtensionSystemPluginManagerPrivate::readPluginPaths(const QStringList &paths)
@@ -306,6 +308,11 @@ namespace QtExtensionSystem {
                 }
             }
             return pluginFiles;
+        }
+
+        void QtExtensionSystemPluginManagerPrivate::resolveDependencies(QtExtensionSystemPluginSpec *spec)
+        {
+            spec->d_ptr->_state = QtExtensionSystemPluginSpec::Resolved;
         }
 
     }

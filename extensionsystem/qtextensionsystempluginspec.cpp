@@ -75,13 +75,13 @@ namespace QtExtensionSystem {
                     break;
                 }
                 if (value.toString() != QtExtensionSystemPluginManager::inst()->identifier()) {
-                     _errorString = "Plugin ignored (IID does not match)";
+                    _errorString = "Plugin ignored (IID does not match)";
                     break;
                 }
                 value = pluginMetaData.value(QLatin1String(_QES_PLUGIN_METADATA));
                 if (!value.isObject())
                 {
-                     _errorString = "Plugin meta data not found";
+                    _errorString = "Plugin meta data not found";
                     break;
                 }
 
@@ -135,7 +135,7 @@ namespace QtExtensionSystem {
                         break;
                     }
                     QJsonValue depValue;
-                    QJsonObject depObject = value.toObject();
+                    QJsonObject depObject = ds.toObject();
                     QStringList keys = depObject.keys();
                     foreach (const QString &key, keys) {
                         depValue = depObject.value(key);
@@ -354,7 +354,7 @@ namespace QtExtensionSystem {
 
         QtExtensionSystemPluginSpec *QtExtensionSystemPluginSpec::read(const QString &path)
         {
-            QtExtensionSystemPluginSpec* spec = new QtExtensionSystemPluginSpec;
+           QtExtensionSystemPluginSpec* spec = new QtExtensionSystemPluginSpec;
            if(!spec->d_ptr->read(path))
            {
                delete spec;
