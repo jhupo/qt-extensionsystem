@@ -46,6 +46,10 @@ namespace QtExtensionSystem {
             void pluginsChanged();
             void initializationDone();
 
+        private Q_SLOTS:
+
+            void nextDelayedInitialize();
+
         protected:
 
             const QScopedPointer<QtExtensionSystemPluginManagerPrivate>     d_ptr;

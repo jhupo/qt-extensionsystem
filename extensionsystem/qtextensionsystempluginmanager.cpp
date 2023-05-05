@@ -5,9 +5,12 @@
 #include <QDebug>
 #include <QMutex>
 #include <QDir>
+#include <QTimer>
 
 namespace QtExtensionSystem {
     namespace Plugin {
+
+        const int DELAYED_INITIALIZE_INTERVAL = 20;
 
         class QtExtensionSystemPluginSpec;
 
@@ -34,12 +37,15 @@ namespace QtExtensionSystem {
 
             void resolveDependencies(QtExtensionSystemPluginSpec* spec);
 
+            void nextDelayedInitialize();
+
             QtExtensionSystemPluginManager*const                q_ptr;
             QMutex                                              _mutex;
             QList<QObject *>                                    _allObjects;
             QString                                             _interfaceIdentifier;
             QStringList                                         _pluginPaths;
             QVector<QtExtensionSystemPluginSpec *>              _pluginsSpec;
+            QVector<QtExtensionSystemPluginSpec *>              _delayedInitializeQueue;
         };
 
 
@@ -156,16 +162,24 @@ namespace QtExtensionSystem {
             Q_D(QtExtensionSystemPluginManager);
             QVector<QtExtensionSystemPluginSpec*> queue;
             d->loadQueue(spec,queue);
+
             foreach(QtExtensionSystemPluginSpec* pluginSpec, queue)
-            {
-                if (pluginSpec->state() == QtExtensionSystemPluginSpec::Resolved)
-                {
-                    d_ptr->loadPlugin(pluginSpec, QtExtensionSystemPluginSpec::Loaded);
-                    d_ptr->loadPlugin(pluginSpec, QtExtensionSystemPluginSpec::Initialized);
-                    d_ptr->loadPlugin(pluginSpec, QtExtensionSystemPluginSpec::Running);
-                    emit pluginsChanged();
-                }
-            }
+                d_ptr->loadPlugin(pluginSpec, QtExtensionSystemPluginSpec::Loaded);
+
+            foreach(QtExtensionSystemPluginSpec* pluginSpec, queue)
+                d_ptr->loadPlugin(pluginSpec, QtExtensionSystemPluginSpec::Initialized);
+
+            foreach(QtExtensionSystemPluginSpec* pluginSpec, queue)
+                d_ptr->loadPlugin(pluginSpec, QtExtensionSystemPluginSpec::Running);
+
+            foreach(QtExtensionSystemPluginSpec* pluginSpec, queue)
+                if(QtExtensionSystemPluginSpec::Running == pluginSpec->state())
+                    d->_delayedInitializeQueue.push_back(pluginSpec);
+
+            QTimer::singleShot(DELAYED_INITIALIZE_INTERVAL,this,SLOT(nextDelayedInitialize()));
+
+
+            emit pluginsChanged();
         }
 
         void QtExtensionSystemPluginManager::unLoadPlugin(QtExtensionSystemPluginSpec *spec)
@@ -173,15 +187,20 @@ namespace QtExtensionSystem {
             Q_D(QtExtensionSystemPluginManager);
             QVector<QtExtensionSystemPluginSpec*> queue;
             d->unLoadQueue(spec,queue);
+
             foreach(QtExtensionSystemPluginSpec* pluginSpec, queue)
-            {
-                if(pluginSpec->state() == QtExtensionSystemPluginSpec::Running)
-                {
-                    d->loadPlugin(pluginSpec,QtExtensionSystemPluginSpec::Stopped);
-                    d->loadPlugin(pluginSpec,QtExtensionSystemPluginSpec::Deleted);
-                    emit pluginsChanged();
-                }
-            }
+                d->loadPlugin(pluginSpec,QtExtensionSystemPluginSpec::Stopped);
+
+            foreach(QtExtensionSystemPluginSpec* pluginSpec, queue)
+                d->loadPlugin(pluginSpec,QtExtensionSystemPluginSpec::Deleted);
+
+            emit pluginsChanged();
+        }
+
+        void QtExtensionSystemPluginManager::nextDelayedInitialize()
+        {
+            Q_D(QtExtensionSystemPluginManager);
+            d->nextDelayedInitialize();
         }
 
         QVector<QtExtensionSystemPlugin *> QtExtensionSystemPluginManager::plugins() const
@@ -313,6 +332,23 @@ namespace QtExtensionSystem {
         void QtExtensionSystemPluginManagerPrivate::resolveDependencies(QtExtensionSystemPluginSpec *spec)
         {
             spec->d_ptr->_state = QtExtensionSystemPluginSpec::Resolved;
+        }
+
+        void QtExtensionSystemPluginManagerPrivate::nextDelayedInitialize()
+        {
+            Q_Q(QtExtensionSystemPluginManager);
+            while (!_delayedInitializeQueue.isEmpty()) {
+                QtExtensionSystemPluginSpec *spec = _delayedInitializeQueue.front();
+                _delayedInitializeQueue.pop_front();
+                bool delay = spec->d_ptr->delayedInitialize();
+                if (delay)
+                    break;
+            }
+            if (_delayedInitializeQueue.isEmpty()) {
+                emit q->initializationDone();
+            } else {
+                QTimer::singleShot(DELAYED_INITIALIZE_INTERVAL,q,SLOT(nextDelayedInitialize()));
+            }
         }
 
     }
