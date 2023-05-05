@@ -1,6 +1,7 @@
 #ifndef __EXTENSIONSYSTEM_GLOBAL_H__
 #define __EXTENSIONSYSTEM_GLOBAL_H__
 
+#include <QObject>
 #include <QtGlobal>
 
 #if defined(EXTENSIONSYSTEM_LIBRARY)
