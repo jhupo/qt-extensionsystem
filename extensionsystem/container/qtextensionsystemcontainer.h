@@ -4,31 +4,35 @@
 
 #include "extensionsystem_global.h"
 
+namespace QtExtensionSystem {
 
-namespace Container {
+    namespace Container {
 
-    class QtExtensionSystemContainerManager;
+        class QtExtensionSystemContainerManager;
 
-    class EXTENSIONSYSTEM_EXPORT QtExtensionSystemContainer : public QObject
-    {
-        Q_OBJECT
-        Q_DISABLE_COPY(QtExtensionSystemContainer)
+        class EXTENSIONSYSTEM_EXPORT QtExtensionSystemContainer : public QObject
+        {
+            Q_OBJECT
+            Q_DISABLE_COPY(QtExtensionSystemContainer)
 
-    protected:
+        protected:
 
-        QtExtensionSystemContainer(const QString& id, QObject* parent = Q_NULLPTR);
-        virtual ~QtExtensionSystemContainer();
+            QtExtensionSystemContainer(const QString& id, QObject* parent = Q_NULLPTR);
+            virtual ~QtExtensionSystemContainer();
 
-        void setContainerID(const QString& id);
-        QString containerID()const;
+            void setContainerID(const QString& id);
+            QString containerID()const;
 
-    private:
+        private:
 
-        QString             _id;
-        friend class QtExtensionSystemContainerManager;
-    };
+            QString             _id;
+            friend class QtExtensionSystemContainerManager;
+        };
 
+
+    }
 
 }
+
 
 #endif

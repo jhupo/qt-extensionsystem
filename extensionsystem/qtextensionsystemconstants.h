@@ -3,8 +3,9 @@
 
 
 #include <QtGlobal>
-
+#include <QEventLoop>
 #include <QString>
+#include <QTimer>
 
 namespace QtExtensionSystem {
     namespace Constants {
@@ -25,15 +26,17 @@ namespace QtExtensionSystem {
             }
 
             template<class T>
-            typedef struct
+            class QtEsBit
             {
+            public:
                 static bool bit(T _v, int _p){ return _v & (static_cast<T>(1) << _p); }
                 static int  clear(T _v, int _p) { return _v &~(static_cast<T>(1) << _p); }
                 static int  set(T _v, int _p) { return _v | (static_cast<T>(1) << _p); }
-            }QtEsBit;
+            };
 
-            typedef struct
+            class QtEsID
             {
+            public:
                 static bool isChildId(const QString& id, const QString& base){return id.startsWith(base + ".");}
                 static QString suffixAfter(const QString& id, const QString& base)
                 {
@@ -41,7 +44,7 @@ namespace QtExtensionSystem {
                         return id.mid(base.length() + 1);
                     return "";
                 }
-            }QtEsID;
+            };
 
 
         }

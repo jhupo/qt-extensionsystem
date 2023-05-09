@@ -3,85 +3,90 @@
 
 #include "qtextensionsystemcontainer.h"
 
-#include <QHash>
+#include <QMap>
 #include <QMutex>
 
-namespace Container {
+namespace QtExtensionSystem {
 
-    class EXTENSIONSYSTEM_EXPORT QtExtensionSystemContainerManager : public QObject
-    {
-        Q_OBJECT
-        Q_DISABLE_COPY(QtExtensionSystemContainerManager)
+    namespace Container {
 
-    public:
-
-        QtExtensionSystemContainerManager(QObject* parent = Q_NULLPTR);
-        virtual~QtExtensionSystemContainerManager();
-
-        static QtExtensionSystemContainerManager* inst();
-
-        template<class T>
-        T* createContainer(const QString& id)
+        class EXTENSIONSYSTEM_EXPORT QtExtensionSystemContainerManager : public QObject
         {
-            QMutexLocker lock(&_lock);
-            if(_containers.contains(id))
-                return qobject_cast<T*>(_containers.value(id));
-            return new T(id);
-        }
+            Q_OBJECT
+            Q_DISABLE_COPY(QtExtensionSystemContainerManager)
 
-        template<class T>
-        T* container(const QString& id)
-        {
-           QMutexLocker rlock(&_lock);
-           if(!_containers.contains(id))
-           {
-               qWarning()<<"CoreContainerManager::container is nullptr";
-               return Q_NULLPTR;//createContainer<T>(id);
-           }
-           return qobject_cast<T*>(_containers.value(id));
-        }
+        public:
 
-        QList<QtExtensionSystemContainer*> containers(const QString& id);
+            QtExtensionSystemContainerManager(QObject* parent = Q_NULLPTR);
+            virtual~QtExtensionSystemContainerManager();
 
-        template<class T>
-        bool registerContainer(T* container)
-        {
-            if(Q_NULLPTR == container)
+            static QtExtensionSystemContainerManager* inst();
+
+            template<class T>
+            T* createContainer(const QString& id)
             {
-                qWarning()<<"CoreContainerManager::registerContainer is nullptr";
-                return false;
+                QMutexLocker lock(&_lock);
+                if(_containers.contains(id))
+                    return qobject_cast<T*>(_containers.value(id));
+                return new T(id);
             }
-            QtExtensionSystemContainer* context = qobject_cast<QtExtensionSystemContainer*>(container);
-            if(Q_NULLPTR == context)
+
+            template<class T>
+            T* container(const QString& id)
             {
-                qWarning()<<"CoreContainerManager::registerContainer Type conversion error";
-                return false;
+               QMutexLocker rlock(&_lock);
+               if(!_containers.contains(id))
+               {
+                   qWarning()<<"CoreContainerManager::container is nullptr";
+                   return Q_NULLPTR;//createContainer<T>(id);
+               }
+               return qobject_cast<T*>(_containers.value(id));
             }
-            QMutexLocker lock(&_lock);
-            if(_containers.contains(context->id()))
+
+            QList<QtExtensionSystemContainer*> containers(const QString& id);
+
+            template<class T>
+            bool registerContainer(T* container)
             {
-                qWarning()<<"CoreContainerManager::registerContainer Already exists id = "<<context->id();
-                return false;
+                if(Q_NULLPTR == container)
+                {
+                    qWarning()<<"CoreContainerManager::registerContainer is nullptr";
+                    return false;
+                }
+                QtExtensionSystemContainer* context = qobject_cast<QtExtensionSystemContainer*>(container);
+                if(Q_NULLPTR == context)
+                {
+                    qWarning()<<"CoreContainerManager::registerContainer Type conversion error";
+                    return false;
+                }
+                QMutexLocker lock(&_lock);
+                if(_containers.contains(context->id()))
+                {
+                    qWarning()<<"CoreContainerManager::registerContainer Already exists id = "<<context->id();
+                    return false;
+                }
+                _containers.insert(context->containerID(),context);
+                emit containerChanged();
+                emit containerRegister(context->id());
+                return true;
             }
-            _containers.insert(context->containerID(),context);
-            emit containerChanged();
-            emit containerRegister(context->id());
-            return true;
-        }
 
-        void unRegisterContainer(const QString& id);
+            void unRegisterContainer(const QString& id);
 
-    Q_SIGNALS:
+        Q_SIGNALS:
 
-           void containerChanged();
-           void containerRegister(const QString& id);
+               void containerChanged();
+               void containerRegister(const QString& id);
 
-    private:
-        QMutex                                                  _lock;
-        QHash<QString,QtExtensionSystemContainer*>              _containers;
-    };
+        private:
+            QMutex                                                  _lock;
+            QMap<QString,QtExtensionSystemContainer*>               _containers;
+        };
 
-    uint qHash(const QtExtensionSystemContainer* value);
+    }
+
 }
+
+
 
 #endif
