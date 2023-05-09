@@ -1,10 +1,13 @@
 #include <QApplication>
 #include <QDir>
 #include <qtextensionsystempluginmanager.h>
+#include <logger/qtextensionsystemlogger.h>
 
 int main(int argc, char** argv)
 {
     QApplication a(argc,argv);
+
+    QtExtensionSystem::Logger::QtExtensionSystemLogger::inst()->installingMessageFilters();
 
     QtExtensionSystem::Plugin::QtExtensionSystemPluginManager::inst()->setInterfaceIdentifier("cn.jhupo.QESP.QtExtensionSystemPlugin");
     QStringList rc(QDir::cleanPath(QApplication::applicationDirPath() + "/plugins"));

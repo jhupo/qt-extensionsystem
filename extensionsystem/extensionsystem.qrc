@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>ExtensionSystem.json</file>
+        <file>AvLogCfg.ini</file>
     </qresource>
 </RCC>
