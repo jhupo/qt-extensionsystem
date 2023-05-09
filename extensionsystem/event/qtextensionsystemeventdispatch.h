@@ -4,6 +4,8 @@
 
 #include "extensionsystem_global.h"
 
+#include "qtextensionsystemevent.h"
+
 #include <QVariant>
 
 namespace QtExtensionSystem {
@@ -41,7 +43,13 @@ namespace QtExtensionSystem {
 
         };
 
-
+#define HANDLE_EXTENSIONSYSTEM_EVENT_BEGIN(name)                                                                        \
+            if (event->type() == QtExtensionSystem::Event::QtExtensionSystemEvent::_Custom_Event_Type_)                 \
+            {                                                                                                           \
+                QtExtensionSystem::Event::QtExtensionSystemEvent* name =                                                \
+                    dynamic_cast<QtExtensionSystem::Event::QtExtensionSystemEvent*>(event);
+#define HANDLE_EXTENSIONSYSTEM_EVENT_END                                                                                \
+            }
 #define REGISTER_INTERNAL_EVENT(event,listener,priority)                                                                \
             QtExtensionSystem::Event::QtExtensionSystemEventDispatch::inst()->registerEvent(event,listener);
 #define REGISTER_EVENT(event,listener)                                                                                  \
