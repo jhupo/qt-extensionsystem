@@ -8,7 +8,7 @@ UI_DIR                  +=              $$top_builddir/extensionsystem/uic
 RCC_DIR                 +=              $$top_builddir/extensionsystem/rcc
 OBJECTS_DIR             +=              $$top_builddir/extensionsystem/obj
 CONFIG                  -=              debug_and_release
-DEFINES                 +=              EXTENSIONSYSTEM_LIBRARY
+DEFINES                 +=              EXTENSIONSYSTEM_LIBRARY LOGGER_EVENT
 QMAKE_CXXFLAGS_RELEASE   =              $$QMAKE_CFLAGS_RELEASE_WITH_DEBUGINFO
 QMAKE_LFLAGS_RELEASE     =              $$QMAKE_LFLAGS_RELEASE_WITH_DEBUGINFO
 

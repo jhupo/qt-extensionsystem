@@ -36,20 +36,25 @@ namespace QtExtensionSystem {
 #pragma pack(1)
                 struct FormaterInformationen
                 {
-                    enum Destination{Console,TextFile,NetWork};
-                    enum Permission{Write,Append};
-                    bool                    disable;
                     QtMsgType               filter;
-                    Destination             destination;
                     QString                 formater;
-                    bool                    asynchronous;
                     bool                    autoFlush;
-                    int                     flushTime;
                     int                     fileSize;
-                    Permission              permisson;
                     QString                 fileName;
                     QString                 target;
                     int                     maxFileNumber;
+                    static QtMsgType fromMsgType(const QString& type)
+                    {
+#define MSG_TYPE(type,msg,level)\
+            if(type == msg)\
+                return level;
+                        MSG_TYPE(type,"Debug",QtDebugMsg);
+                        MSG_TYPE(type,"Info",QtInfoMsg);
+                        MSG_TYPE(type,"Warning",QtWarningMsg);
+                        MSG_TYPE(type,"Critical",QtCriticalMsg);
+                        MSG_TYPE(type,"Fatal",QtFatalMsg);
+                        return QtDebugMsg;
+                    }
                 };
 #pragma pack()
                 LoggerFormater(const QString& configure){analysisConfigureInformation(configure);}
@@ -60,8 +65,8 @@ namespace QtExtensionSystem {
             protected:
                 void analysisConfigureInformation(const QString& configure);
                 QFile                                                     _file;
-                int                                                       _number;
                 QMutex                                                    _mutex;
+                QVector<QString>                                          _files;
             };
 
             void setLoggerFormater(LoggerFormater* format);
@@ -75,7 +80,7 @@ namespace QtExtensionSystem {
 
     }
 }
-
+Q_DECLARE_METATYPE(QtMsgType)
 
 
 #endif

@@ -26,22 +26,22 @@ namespace QtExtensionSystem {
 
         }
 
-        void QtExtensionSystemEvent::setExtensionSystemData(const QVariant &data)
+        void QtExtensionSystemEvent::setCustomData(const QVariant &data)
         {
             _variant = data;
         }
 
-        QVariant QtExtensionSystemEvent::extensionSystemData() const
+        QVariant QtExtensionSystemEvent::customData() const
         {
             return _variant;
         }
 
-        void QtExtensionSystemEvent::setExtensionSystemEvent(const int event)
+        void QtExtensionSystemEvent::setCustomEvent(const int event)
         {
             _event = event;
         }
 
-        int QtExtensionSystemEvent::extensionSystemEvent() const
+        int QtExtensionSystemEvent::customEvent() const
         {
             return _event;
         }

@@ -11,9 +11,9 @@ namespace QtExtensionSystem {
     namespace Constants {
         namespace Event {
 
-
-
-
+            typedef enum{
+                ES_LOGGER,
+            }_Event;
         }
 
         namespace Utils {

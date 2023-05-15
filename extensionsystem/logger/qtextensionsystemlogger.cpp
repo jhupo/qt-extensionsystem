@@ -1,4 +1,6 @@
 #include "qtextensionsystemlogger.h"
+#include "event/qtextensionsystemeventdispatch.h"
+#include "qtextensionsystemconstants.h"
 
 #include <QMutex>
 #include <QSettings>
@@ -49,9 +51,11 @@ namespace QtExtensionSystem{
 
         void QtExtensionSystemLoggerPrivate::call_MessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
         {
-            if(QtExtensionSystemLogger::inst()->loggerFormater()->_information.disable)
-                return;
-            QtExtensionSystemLogger::inst()->loggerFormater()->write(QtExtensionSystemLogger::inst()->loggerFormater()->formater(type,context,msg));
+            const QString format = QtExtensionSystemLogger::inst()->loggerFormater()->formater(type,context,msg);
+#ifdef LOGGER_EVENT
+            PUBLISH_EXTENSIONSYSTEM_EVENT_VALUE(QtExtensionSystem::Constants::Event::ES_LOGGER,qMakePair(type,format));
+#endif
+            QtExtensionSystemLogger::inst()->loggerFormater()->write(format);
         }
 
         QtExtensionSystemLogger::QtExtensionSystemLogger(QObject *parent)
@@ -127,43 +131,47 @@ namespace QtExtensionSystem{
         {
             QString format = _information.formater;
 
-            if(_information.permisson >= type)
+            FORMATER_FORMATER(_logger_Timer,QString(QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd hh:mm:ss.zzz"))));
+
+            if(format.contains(_logger_Level))
             {
-                FORMATER_FORMATER(_logger_Timer,QString(QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd hh:mm:ss.zzz"))));
-
-                if(format.contains(_logger_Level))
-                {
-                    switch (type) {
-                    case QtDebugMsg:
-                        format = format.replace(_logger_Level,QStringLiteral("Debug"));
-                        break;
-                    case QtWarningMsg:
-                        format = format.replace(_logger_Level,QStringLiteral("Warning"));
-                        break;
-                    case QtInfoMsg:
-                        format = format.replace(_logger_Level,QStringLiteral("Info"));
-                        break;
-                    case QtCriticalMsg:
-                        format = format.replace(_logger_Level,QStringLiteral("Critical"));
-                        break;
-                    case QtFatalMsg:
-                        format = format.replace(_logger_Level,QStringLiteral("Fatal"));
-                        break;
-                    default:break;
-                    }
+                switch (type) {
+                case QtDebugMsg:
+                    format = format.replace(_logger_Level,QStringLiteral("Debug"));
+                    break;
+                case QtWarningMsg:
+                    format = format.replace(_logger_Level,QStringLiteral("Warning"));
+                    break;
+                case QtInfoMsg:
+                    format = format.replace(_logger_Level,QStringLiteral("Info"));
+                    break;
+                case QtCriticalMsg:
+                    format = format.replace(_logger_Level,QStringLiteral("Critical"));
+                    break;
+                case QtFatalMsg:
+                    format = format.replace(_logger_Level,QStringLiteral("Fatal"));
+                    break;
+                default:break;
                 }
-
-                FORMATER_FORMATER(_logger_Thread,QString("0x%1").arg(quintptr(QThread::currentThreadId()), 8, 16, QLatin1Char('0')));
-
-                FORMATER_FORMATER(_logger_Func,QString(context.function));
-
-                FORMATER_FORMATER(_logger_File,QString(context.file));
-
-                FORMATER_FORMATER(_logger_Line,QString::number(context.line));
-
-                FORMATER_FORMATER(_logger_Msg,msg);
-
             }
+
+            FORMATER_FORMATER(_logger_Thread,QString("0x%1").arg(quintptr(QThread::currentThreadId()), 8, 16, QLatin1Char('0')));
+
+            QString str = context.function;
+            str.remove(0,str.indexOf("_cdecl ") + 7);
+            str.remove(str.lastIndexOf("("),str.size() - str.lastIndexOf("(") + 1);
+
+            FORMATER_FORMATER(_logger_Func,str);
+
+            str = context.file;
+            str.remove(0,str.lastIndexOf(QDir::separator(),str.lastIndexOf(QDir::separator()) - 1) +  1);
+
+            FORMATER_FORMATER(_logger_File,str);
+
+            FORMATER_FORMATER(_logger_Line,QString::number(context.line));
+
+            FORMATER_FORMATER(_logger_Msg,msg);
+
 
             return format;
         }
@@ -171,22 +179,32 @@ namespace QtExtensionSystem{
         void QtExtensionSystemLogger::LoggerFormater::write(const QString &msg)
         {
             static QTextStream os;
+            static quint16 number = 0;
 
             QMutexLocker locker(&_mutex);
+
+            if(_files.size() > _information.maxFileNumber)
+            {
+                number = 0;
+                for(int i = 0; i < _files.size() - _information.maxFileNumber;++i)
+                    QFile::remove(_files.takeFirst());
+            }
 
             if(!_file.isOpen())
             {
                 QString format = _information.fileName;
                 FORMATER_FORMATER(_logger_Timer,QDateTime::currentDateTime().toString(QStringLiteral("yyyy_MM_dd_")));
-                FORMATER_FORMATER(_logger_Number,QString::number(_number));
+                FORMATER_FORMATER(_logger_Number,QString::number(number++));
                 _file.setFileName( _information.target+format);
                 if(_file.open(QFile::ReadWrite|QFile::Append|QFile::Text))
+                {
                     os.setDevice(&_file);
+                    _files.push_back(_file.fileName());
+                }
             }
 
             if(_file.size() >= _information.fileSize)
             {
-                _number++;
                 os.flush();
                 _file.close();
                 locker.unlock();
@@ -202,22 +220,20 @@ namespace QtExtensionSystem{
 
         void QtExtensionSystemLogger::LoggerFormater::analysisConfigureInformation(const QString &configure)
         {
-            _number = 0;
             QSettings settings(configure,QSettings::IniFormat);
             settings.beginGroup(QStringLiteral("Logger"));
-            _information.disable = settings.value(QStringLiteral("Disable")).toBool();
-            _information.filter = static_cast<QtMsgType>(settings.value(QStringLiteral("Filter")).toInt());
-            _information.destination = static_cast<QtExtensionSystemLogger::LoggerFormater::FormaterInformationen::Destination>(settings.value(QStringLiteral("Destination")).toInt());
+            _information.filter = QtExtensionSystemLogger::LoggerFormater::FormaterInformationen::fromMsgType(settings.value(QStringLiteral("Filter")).toString());
             _information.formater = settings.value(QStringLiteral("Formater")).toString();
-            _information.asynchronous = settings.value(QStringLiteral("Asynchronous")).toBool();
             _information.autoFlush = settings.value(QStringLiteral("AutoFlush")).toBool();
-            _information.flushTime = settings.value(QStringLiteral("FlushTime")).toInt();
             _information.fileSize = settings.value(QStringLiteral("FileSize")).toInt();
-            _information.permisson = static_cast<QtExtensionSystemLogger::LoggerFormater::FormaterInformationen::Permission>(settings.value(QStringLiteral("Permisson")).toInt());
             _information.fileName = settings.value(QStringLiteral("FileName")).toString();
             _information.target = settings.value(QStringLiteral("Target")).toString();
             _information.maxFileNumber = settings.value(QStringLiteral("MaxFileNumber")).toInt();
             settings.endGroup();
+
+            QDir logger(_information.target);
+            if(!logger.exists())
+                logger.mkpath(logger.absolutePath());
         }
 
     }

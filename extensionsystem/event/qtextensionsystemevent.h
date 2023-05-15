@@ -18,11 +18,11 @@ namespace QtExtensionSystem {
             QtExtensionSystemEvent(const int event, const QVariant& data, Type type = _Custom_Event_Type_);
             virtual~QtExtensionSystemEvent();
 
-            void setExtensionSystemData(const QVariant& data);
-            QVariant extensionSystemData()const;
+            void setCustomData(const QVariant& data);
+            QVariant customData()const;
 
-            void setExtensionSystemEvent(const int event);
-            int extensionSystemEvent()const;
+            void setCustomEvent(const int event);
+            int customEvent()const;
 
 
             static QEvent::Type _Custom_Event_Type_;
