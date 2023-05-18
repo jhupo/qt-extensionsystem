@@ -41,6 +41,7 @@ namespace QtExtensionSystem {
 
             QtExtensionSystemPluginManager*const                q_ptr;
             QMutex                                              _mutex;
+            QMutex                                              _pluginMutex;
             QList<QObject *>                                    _allObjects;
             QString                                             _interfaceIdentifier;
             QStringList                                         _pluginPaths;
@@ -227,7 +228,7 @@ namespace QtExtensionSystem {
 
         void QtExtensionSystemPluginManagerPrivate::loadPlugin(QtExtensionSystemPluginSpec *spec, QtExtensionSystemPluginSpec::State destState)
         {
-            QMutexLocker locker(&_mutex);
+            QMutexLocker locker(&_pluginMutex);
             if (spec->hasError() || spec->state() != destState - 1)
                 return;
             switch (destState)
