@@ -66,6 +66,7 @@ namespace QtExtensionSystem {
                     return false;
                 }
                 _containers.insert(context->containerID(),context);
+                lock.unlock();
                 emit containerChanged();
                 emit containerRegister(context->id());
                 return true;
@@ -75,8 +76,8 @@ namespace QtExtensionSystem {
 
         Q_SIGNALS:
 
-               void containerChanged();
-               void containerRegister(const QString& id);
+            void containerChanged();
+            void containerRegister(const QString& id);
 
         private:
             QMutex                                                  _lock;

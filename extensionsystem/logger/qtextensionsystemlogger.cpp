@@ -1,11 +1,11 @@
 #include "qtextensionsystemlogger.h"
-#include "event/qtextensionsystemeventdispatch.h"
 #include "qtextensionsystemconstants.h"
 
 #include <QMutex>
 #include <QSettings>
 #include <QThread>
 #include <QDateTime>
+#include <QCoreApplication>
 #include <QDir>
 
 namespace QtExtensionSystem{
@@ -46,16 +46,19 @@ namespace QtExtensionSystem{
         void QtExtensionSystemLoggerPrivate::init()
         {
             _isMsgFilters = false;
-            _loggerFormater = new QtExtensionSystemLogger::LoggerFormater(":/AvLogCfg.ini");
+            _loggerFormater = new QtExtensionSystemLogger::LoggerFormater(QDir::cleanPath(QCoreApplication::applicationDirPath() + "/ESLogCfg.ini"));
         }
 
         void QtExtensionSystemLoggerPrivate::call_MessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
         {
             const QString format = QtExtensionSystemLogger::inst()->loggerFormater()->formater(type,context,msg);
 #ifdef LOGGER_EVENT
-            PUBLISH_EXTENSIONSYSTEM_EVENT_VALUE(QtExtensionSystem::Constants::Event::ES_LOGGER,qMakePair(type,format));
+            emit QtExtensionSystemLogger::inst()->logger_format(type,format);
 #endif
             QtExtensionSystemLogger::inst()->loggerFormater()->write(format);
+
+            if(QtFatalMsg == type)
+                abort();
         }
 
         QtExtensionSystemLogger::QtExtensionSystemLogger(QObject *parent)
@@ -129,6 +132,9 @@ namespace QtExtensionSystem{
 
         QString QtExtensionSystemLogger::LoggerFormater::formater(QtMsgType type, const QMessageLogContext &context, const QString &msg) const
         {
+            if(type < _information.filter)
+                return "";
+
             QString format = _information.formater;
 
             FORMATER_FORMATER(_logger_Timer,QString(QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd hh:mm:ss.zzz"))));
@@ -179,28 +185,23 @@ namespace QtExtensionSystem{
         void QtExtensionSystemLogger::LoggerFormater::write(const QString &msg)
         {
             static QTextStream os;
-            static quint16 number = 0;
+
+            if(msg.isEmpty())
+                return;
 
             QMutexLocker locker(&_mutex);
 
-            if(_files.size() > _information.maxFileNumber)
-            {
-                number = 0;
-                for(int i = 0; i < _files.size() - _information.maxFileNumber;++i)
-                    QFile::remove(_files.takeFirst());
-            }
+            if(_number > _information.maxFileNumber)
+                _number = 0;
 
             if(!_file.isOpen())
             {
                 QString format = _information.fileName;
                 FORMATER_FORMATER(_logger_Timer,QDateTime::currentDateTime().toString(QStringLiteral("yyyy_MM_dd_")));
-                FORMATER_FORMATER(_logger_Number,QString::number(number++));
+                FORMATER_FORMATER(_logger_Number,QString::number(_number++));
                 _file.setFileName( _information.target+format);
-                if(_file.open(QFile::ReadWrite|QFile::Append|QFile::Text))
-                {
+                if(_file.open(QFile::WriteOnly | QFile::Text))
                     os.setDevice(&_file);
-                    _files.push_back(_file.fileName());
-                }
             }
 
             if(_file.size() >= _information.fileSize)
@@ -221,6 +222,18 @@ namespace QtExtensionSystem{
         void QtExtensionSystemLogger::LoggerFormater::analysisConfigureInformation(const QString &configure)
         {
             QSettings settings(configure,QSettings::IniFormat);
+            if(QSettings::NoError != settings.status())
+            {
+                qCritical("Logging profile not found, enable default configuration.");
+                _information.filter = QtWarningMsg;
+                _information.formater = "[%Timer%][%Level%][%Thread%][%Func%][%File%:%Line%]%Message%";
+                _information.autoFlush = true;
+                _information.fileSize = 10485760;
+                _information.fileName = "log_%Timer%_%Number%.log";
+                _information.target = "./log/";
+                _information.maxFileNumber = 10;
+                return;
+            }
             settings.beginGroup(QStringLiteral("Logger"));
             _information.filter = QtExtensionSystemLogger::LoggerFormater::FormaterInformationen::fromMsgType(settings.value(QStringLiteral("Filter")).toString());
             _information.formater = settings.value(QStringLiteral("Formater")).toString();
@@ -230,6 +243,8 @@ namespace QtExtensionSystem{
             _information.target = settings.value(QStringLiteral("Target")).toString();
             _information.maxFileNumber = settings.value(QStringLiteral("MaxFileNumber")).toInt();
             settings.endGroup();
+
+            _number = 0;
 
             QDir logger(_information.target);
             if(!logger.exists())

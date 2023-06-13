@@ -65,17 +65,21 @@ namespace QtExtensionSystem {
             protected:
                 void analysisConfigureInformation(const QString& configure);
                 QFile                                                     _file;
+                int                                                       _number;
                 QMutex                                                    _mutex;
-                QVector<QString>                                          _files;
             };
 
             void setLoggerFormater(LoggerFormater* format);
             LoggerFormater* loggerFormater();
 
+        Q_SIGNALS:
+
+            void logger_format(QtMsgType,const QString&);
+
         protected:
 
             const QScopedPointer<QtExtensionSystemLoggerPrivate>            d_ptr;
-            friend class LoggerFormater;
+            friend struct LoggerFormater;
         };
 
     }
