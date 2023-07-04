@@ -17,6 +17,7 @@ namespace QtExtensionSystem {
         namespace  {
 
                 const char _QES_PLUGIN_METADATA[]                    =   "MetaData";
+                const char _QES_PLUGIN_PLUGINNAME[]                  =   "PluginName";
                 const char _QES_PLUGIN_DISPLAYNAME[]                 =   "DisplayName";
                 const char _QES_PLUGIN_DISPLAYICON[]                 =   "DisplayIcon";
                 const char _QES_PLUGIN_TRANSLATOR[]                  =   "Translators";
@@ -93,6 +94,14 @@ namespace QtExtensionSystem {
                     break;
                 }
                 _displayName = value.toString();
+
+                value = _metaData.value(QLatin1String(_QES_PLUGIN_PLUGINNAME));
+                if(value.isUndefined() || !value.isString())
+                {
+                    _errorString = "Plugin plugin name not found or undefined";
+                    break;
+                }
+                _pluginName = value.toString();
 
                 value = _metaData.value(QLatin1String(_QES_PLUGIN_DISPLAYICON));
                 if(value.isUndefined() || !value.isString())
@@ -290,6 +299,12 @@ namespace QtExtensionSystem {
         {
             Q_D(const QtExtensionSystemPluginSpec);
             return d->_hasError;
+        }
+
+        QString QtExtensionSystemPluginSpec::pluginName() const
+        {
+            Q_D(const QtExtensionSystemPluginSpec);
+            return d->_pluginName;
         }
 
         QString QtExtensionSystemPluginSpec::errorString() const

@@ -11,9 +11,6 @@ namespace QtExtensionSystem {
     namespace Constants {
         namespace Event {
 
-            typedef enum{
-                ES_LOGGER,
-            }_Event;
         }
 
         namespace Utils {
@@ -44,6 +41,20 @@ namespace QtExtensionSystem {
                         return id.mid(base.length() + 1);
                     return "";
                 }
+            };
+
+            class QtEsStr
+            {
+            public:
+                static void str2char(const QString& _s, char* _d, const int _l){
+                    memset(_d,0,_l);
+                    memcpy(_d,_s.toUtf8().data(),qMin(_s.toUtf8().size(),_l));
+                }
+                static QString char2str(const char* _s){return QString(_s);}
+                static void copy2char(char* _d, const char* _s, const int _l){memcpy(_d,_s,_l);}
+                static std::string char2stdstr(const char* _s){return std::string(_s);}
+                static std::string qstr2stdstr(const QString& _s){return _s.toUtf8().data();}
+                static QString stdstr2qstr(const std::string& _s){return _s.c_str();}
             };
 
 

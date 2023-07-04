@@ -36,6 +36,7 @@ namespace QtExtensionSystem {
             virtual~QtExtensionSystemPluginSpec();
 
             bool hasError()const;
+            QString pluginName()const;
             QString errorString()const;
             QString displayName()const;
             QString displayIcon()const;

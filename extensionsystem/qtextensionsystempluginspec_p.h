@@ -39,6 +39,7 @@ namespace QtExtensionSystem {
             QMutex                                          _mutex;
             bool                                            _hasError;
             QString                                         _errorString;
+            QString                                         _pluginName;
             QString                                         _displayName;
             QString                                         _displayIcon;
             QString                                         _version;

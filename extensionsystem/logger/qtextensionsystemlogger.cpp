@@ -52,11 +52,12 @@ namespace QtExtensionSystem{
         void QtExtensionSystemLoggerPrivate::call_MessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
         {
             const QString format = QtExtensionSystemLogger::inst()->loggerFormater()->formater(type,context,msg);
-#ifdef LOGGER_EVENT
             emit QtExtensionSystemLogger::inst()->logger_format(type,format);
-#endif
+#ifdef LOGGER_WRITE
             QtExtensionSystemLogger::inst()->loggerFormater()->write(format);
-
+#else
+            std::count<<format.toUtf8().data()<<std::endl;
+#endif
             if(QtFatalMsg == type)
                 abort();
         }
@@ -222,18 +223,6 @@ namespace QtExtensionSystem{
         void QtExtensionSystemLogger::LoggerFormater::analysisConfigureInformation(const QString &configure)
         {
             QSettings settings(configure,QSettings::IniFormat);
-            if(QSettings::NoError != settings.status())
-            {
-                qCritical("Logging profile not found, enable default configuration.");
-                _information.filter = QtWarningMsg;
-                _information.formater = "[%Timer%][%Level%][%Thread%][%Func%][%File%:%Line%]%Message%";
-                _information.autoFlush = true;
-                _information.fileSize = 10485760;
-                _information.fileName = "log_%Timer%_%Number%.log";
-                _information.target = "./log/";
-                _information.maxFileNumber = 10;
-                return;
-            }
             settings.beginGroup(QStringLiteral("Logger"));
             _information.filter = QtExtensionSystemLogger::LoggerFormater::FormaterInformationen::fromMsgType(settings.value(QStringLiteral("Filter")).toString());
             _information.formater = settings.value(QStringLiteral("Formater")).toString();
@@ -245,10 +234,11 @@ namespace QtExtensionSystem{
             settings.endGroup();
 
             _number = 0;
-
+#ifdef LOGGER_WRITE
             QDir logger(_information.target);
             if(!logger.exists())
                 logger.mkpath(logger.absolutePath());
+#endif
         }
 
     }
