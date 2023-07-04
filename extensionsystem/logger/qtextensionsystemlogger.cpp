@@ -8,6 +8,8 @@
 #include <QCoreApplication>
 #include <QDir>
 
+#include <iostream>
+
 namespace QtExtensionSystem{
     namespace Logger {
 
@@ -56,7 +58,7 @@ namespace QtExtensionSystem{
 #ifdef LOGGER_WRITE
             QtExtensionSystemLogger::inst()->loggerFormater()->write(format);
 #else
-            std::count<<format.toUtf8().data()<<std::endl;
+            std::cout<<format.toUtf8().data()<<std::endl;
 #endif
             if(QtFatalMsg == type)
                 abort();
@@ -200,7 +202,7 @@ namespace QtExtensionSystem{
                 QString format = _information.fileName;
                 FORMATER_FORMATER(_logger_Timer,QDateTime::currentDateTime().toString(QStringLiteral("yyyy_MM_dd_")));
                 FORMATER_FORMATER(_logger_Number,QString::number(_number++));
-                _file.setFileName( _information.target+format);
+                _file.setFileName(QDir::cleanPath(QCoreApplication::applicationDirPath() + _information.target + format));
                 if(_file.open(QFile::WriteOnly | QFile::Text))
                     os.setDevice(&_file);
             }
@@ -235,7 +237,7 @@ namespace QtExtensionSystem{
 
             _number = 0;
 #ifdef LOGGER_WRITE
-            QDir logger(_information.target);
+            QDir logger(QDir::cleanPath(QCoreApplication::applicationDirPath() + _information.target));
             if(!logger.exists())
                 logger.mkpath(logger.absolutePath());
 #endif
