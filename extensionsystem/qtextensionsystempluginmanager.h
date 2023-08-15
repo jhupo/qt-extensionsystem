@@ -3,60 +3,58 @@
 
 #include "extensionsystem_global.h"
 
-namespace QtExtensionSystem {
-    namespace Plugin {
+namespace Plugin {
 
-        class QtExtensionSystemPlugin;
-        class QtExtensionSystemPluginSpec;
-        class QtExtensionSystemPluginManagerPrivate;
+    class QtExtensionSystemPlugin;
+    class QtExtensionSystemPluginSpec;
+    class QtExtensionSystemPluginManagerPrivate;
 
-        class EXTENSIONSYSTEM_EXPORT QtExtensionSystemPluginManager : public QObject
-        {
-            Q_OBJECT
-            Q_DISABLE_COPY(QtExtensionSystemPluginManager)
-            Q_DECLARE_PRIVATE(QtExtensionSystemPluginManager)
+    class EXTENSIONSYSTEM_EXPORT QtExtensionSystemPluginManager : public QObject
+    {
+        Q_OBJECT
+        Q_DISABLE_COPY(QtExtensionSystemPluginManager)
+        Q_DECLARE_PRIVATE(QtExtensionSystemPluginManager)
 
-        public:
+    public:
 
-            QtExtensionSystemPluginManager(QObject* parent = Q_NULLPTR);
-            virtual ~QtExtensionSystemPluginManager();
+        QtExtensionSystemPluginManager(QObject* parent = Q_NULLPTR);
+        virtual ~QtExtensionSystemPluginManager();
 
-            static QtExtensionSystemPluginManager* inst();
+        static QtExtensionSystemPluginManager* inst();
 
-            void addObject(QObject *obj);
-            void removeObject(QObject *obj);
-            QList<QObject *> allObjects();
+        void addObject(QObject *obj);
+        void removeObject(QObject *obj);
+        QList<QObject *> allObjects();
 
-            void setInterfaceIdentifier(const QString& iid);
-            QString identifier()const;
+        void setInterfaceIdentifier(const QString& iid);
+        QString identifier()const;
 
-            void setPluginPaths(const QStringList& paths);
-            QStringList pluginPaths()const;
+        void setPluginPaths(const QStringList& paths);
+        QStringList pluginPaths()const;
 
-            QVector<QtExtensionSystemPluginSpec *> specs()const;
-            QVector<QtExtensionSystemPlugin*> plugins()const;
-            QtExtensionSystemPluginSpec* spec(const QString& name)const;
+        QVector<QtExtensionSystemPluginSpec *> specs()const;
+        QVector<QtExtensionSystemPlugin*> plugins()const;
+        QtExtensionSystemPluginSpec* spec(const QString& name)const;
 
-            void loadPlugins();
-            void loadPlugin(QtExtensionSystemPluginSpec *spec);
-            void unLoadPlugin(QtExtensionSystemPluginSpec* spec);
+        void loadPlugins();
+        void loadPlugin(QtExtensionSystemPluginSpec *spec);
+        void unLoadPlugin(QtExtensionSystemPluginSpec* spec);
 
-        Q_SIGNALS:
+    Q_SIGNALS:
 
-            void pluginsChanged();
-            void initializationDone();
+        void pluginsChanged();
+        void initializationDone();
 
-        private Q_SLOTS:
+    private Q_SLOTS:
 
-            void nextDelayedInitialize();
+        void nextDelayedInitialize();
 
-        protected:
+    protected:
 
-            const QScopedPointer<QtExtensionSystemPluginManagerPrivate>     d_ptr;
+        const QScopedPointer<QtExtensionSystemPluginManagerPrivate>     d_ptr;
 
-        };
+    };
 
-    }
 }
 
 

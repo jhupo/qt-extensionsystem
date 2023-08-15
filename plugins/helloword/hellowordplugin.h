@@ -7,7 +7,7 @@
 
 namespace HelloWord {
 
-    class HELLOWORD_EXPORT HelloWordPlugin : public QtExtensionSystem::Plugin::QtExtensionSystemPlugin
+    class HELLOWORD_EXPORT HelloWordPlugin : public Plugin::QtExtensionSystemPlugin
     {
         Q_OBJECT
         Q_DISABLE_COPY(HelloWordPlugin)

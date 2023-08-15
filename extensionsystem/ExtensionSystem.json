@@ -1,9 +1,9 @@
 {
-    "ApplicationName" : [
-        ""
+    "Names" : [
+        "",
     ],
-    "ApplicationIcon" : "",
+    "Icon" : "",
     "Language" : "zh_CN",
     "Company" : "",
-    "Copyright" : "2016-2023 "
+    "Copyright" : "2016-2023"
 }

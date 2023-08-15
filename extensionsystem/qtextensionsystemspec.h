@@ -3,7 +3,7 @@
 
 #include "extensionsystem_global.h"
 
-namespace QtExtensionSystem {
+namespace System {
 
     class QtExtensionSystemSpecPrivate;
 

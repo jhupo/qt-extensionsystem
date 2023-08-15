@@ -6,7 +6,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
-namespace QtExtensionSystem {
+namespace System {
 
     namespace{
         const char _QT_EXTENSION_SYSTEM_SPEC_[]        =   ":/ExtensionSystem.json";
@@ -58,7 +58,7 @@ namespace QtExtensionSystem {
         QResource resource(_QT_EXTENSION_SYSTEM_SPEC_);
         if(!resource.isValid())
         {
-            qCritical()<<"Failed to load "<<_QT_EXTENSION_SYSTEM_SPEC_<< " resource";
+            qCCritical(logger_extension)<<"Failed to load "<<_QT_EXTENSION_SYSTEM_SPEC_<< " resource";
             return;
         }
         QJsonParseError error;
@@ -67,14 +67,14 @@ namespace QtExtensionSystem {
         QJsonDocument jsonDoc = QJsonDocument::fromJson(jsonString.toUtf8(), &error);
         if (QJsonParseError::NoError != error.error)
         {
-            qCritical() << error.errorString();
+            qCCritical(logger_extension) << error.errorString();
             return;
         }
         QJsonObject json = jsonDoc.object();
         QJsonValue value = json.value(QLatin1String("Names"));
         if(value.isUndefined() || !value.isArray())
         {
-            qCritical() << "system spec names not found or undefined";
+            qCCritical(logger_extension) << "system spec names not found or undefined";
             return;
         }
         QJsonArray array = value.toArray();
@@ -82,7 +82,7 @@ namespace QtExtensionSystem {
         {
             if(!name.isString())
             {
-                qCritical() << "system spec namesarray values not string";
+                qCCritical(logger_extension) << "system spec namesarray values not string";
                 return;
             }
             _names.push_back(name.toString());
@@ -91,7 +91,7 @@ namespace QtExtensionSystem {
         value = json.value(QLatin1String("Icon"));
         if(value.isUndefined() || !value.isString())
         {
-            qCritical() << "system spec icon not found or undefined";
+            qCCritical(logger_extension) << "system spec icon not found or undefined";
             return;
         }
         _icon = value.toString();
@@ -99,7 +99,7 @@ namespace QtExtensionSystem {
         value = json.value(QLatin1String("Language"));
         if(value.isUndefined() || !value.isString())
         {
-            qCritical() << "system spec language not found or undefined";
+            qCCritical(logger_extension) << "system spec language not found or undefined";
             return;
         }
         _language = value.toString();
@@ -107,7 +107,7 @@ namespace QtExtensionSystem {
         value = json.value(QLatin1String("Company"));
         if(value.isUndefined() || !value.isString())
         {
-            qCritical() << "system spec company not found or undefined";
+            qCCritical(logger_extension) << "system spec company not found or undefined";
             return;
         }
         _company = value.toString();
@@ -115,7 +115,7 @@ namespace QtExtensionSystem {
         value = json.value(QLatin1String("Copyright"));
         if(value.isUndefined() || !value.isString())
         {
-            qCritical() << "system spec copyright not found or undefined";
+            qCCritical(logger_extension) << "system spec copyright not found or undefined";
             return;
         }
         _copyright = value.toString();

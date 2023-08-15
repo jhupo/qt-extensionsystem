@@ -1,14 +1,16 @@
-include($$top_srcdir/library.pri)
+include($$top_libsdir/library.pri)
+#include($$top_srcdir/copyright.pri)
+
 QT                      +=              core
 CONFIG                  +=              shared
 TEMPLATE                 =              lib
 DESTDIR                  =              $$top_builddir/bin
-MOC_DIR                 +=              $$top_builddir/extensionsystem/moc
-UI_DIR                  +=              $$top_builddir/extensionsystem/uic
-RCC_DIR                 +=              $$top_builddir/extensionsystem/rcc
-OBJECTS_DIR             +=              $$top_builddir/extensionsystem/obj
+MOC_DIR                 +=              $$top_builddir/libs/extensionsystem/moc
+UI_DIR                  +=              $$top_builddir/libs/extensionsystem/uic
+RCC_DIR                 +=              $$top_builddir/libs/extensionsystem/rcc
+OBJECTS_DIR             +=              $$top_builddir/libs/extensionsystem/obj
 CONFIG                  -=              debug_and_release
-DEFINES                 +=              EXTENSIONSYSTEM_LIBRARY LOGGER_EVENT
+DEFINES                 +=              EXTENSIONSYSTEM_LIBRARY QT_MESSAGELOGCONTEXT
 QMAKE_CXXFLAGS_RELEASE   =              $$QMAKE_CFLAGS_RELEASE_WITH_DEBUGINFO
 QMAKE_LFLAGS_RELEASE     =              $$QMAKE_LFLAGS_RELEASE_WITH_DEBUGINFO
 

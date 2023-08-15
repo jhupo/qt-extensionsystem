@@ -3,20 +3,18 @@
 
 #include <QObject>
 
-namespace QtExtensionSystem {
-    namespace Plugin {
+namespace Plugin {
 
-        class QtExtensionSystemPluginSpec;
+    class QtExtensionSystemPluginSpec;
 
-        class QtExtensionSystemPluginPrivate
-        {
-        public:
-            QtExtensionSystemPluginSpec*        _pluginSpec;
-            QList<QObject *>                    _addedObjectsInReverseOrder;
-        };
+    class QtExtensionSystemPluginPrivate
+    {
+    public:
+        QtExtensionSystemPluginSpec*        _pluginSpec;
+        QList<QObject *>                    _addedObjectsInReverseOrder;
+    };
 
 
-    }
 }
 
 
