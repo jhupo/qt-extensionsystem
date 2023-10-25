@@ -1,11 +1,11 @@
 {
+    "PluginName" : "HelloWord",
 	"DisplayName" : "HelloWord", 
 	"DisplayIcon" : "", 
 	"Translators" : [
 		""
 	], 
 	"Dependencys" : [
-		
 	], 
 	"Version" : "2.0.3"
 }

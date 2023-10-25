@@ -74,7 +74,8 @@ namespace Plugin {
         Q_D(QtExtensionSystemPluginManager);
         if(!obj)
         {
-            qCCritical(logger_extension)<<"add object for empty";return;
+            qCCritical(logger_extension)<<"add object for empty";
+            return;
         }
         QMutexLocker lock(&d->_mutex);
         if(d->_allObjects.contains(obj))
@@ -147,6 +148,7 @@ namespace Plugin {
             if(spec->displayName() == name)
                 return spec;
         }
+        qCWarning(logger_extension)<<"No"<<name<<"plugin found";
         return Q_NULLPTR;
     }
 
@@ -162,6 +164,12 @@ namespace Plugin {
     void QtExtensionSystemPluginManager::loadPlugin(QtExtensionSystemPluginSpec *spec)
     {
         Q_D(QtExtensionSystemPluginManager);
+
+        if(!spec){
+            qCWarning(logger_extension) <<"Load empty plugin";
+            return;
+        }
+
         QVector<QtExtensionSystemPluginSpec*> queue;
         d->loadQueue(spec,queue);
 
@@ -187,6 +195,12 @@ namespace Plugin {
     void QtExtensionSystemPluginManager::unLoadPlugin(QtExtensionSystemPluginSpec *spec)
     {
         Q_D(QtExtensionSystemPluginManager);
+
+        if(!spec){
+            qCWarning(logger_extension) <<"unLoad empty plugin";
+            return;
+        }
+
         QVector<QtExtensionSystemPluginSpec*> queue;
         d->unLoadQueue(spec,queue);
 
@@ -229,8 +243,18 @@ namespace Plugin {
 
     void QtExtensionSystemPluginManagerPrivate::loadPlugin(QtExtensionSystemPluginSpec *spec, QtExtensionSystemPluginSpec::State destState)
     {
-        if (spec->hasError() || spec->state() != destState - 1)
+        if(!spec){
+            qCWarning(logger_extension)<< "Loaded is an empty plugin";
             return;
+        }
+        if(spec->hasError()){
+            qCWarning(logger_extension)<<spec->pluginName() <<"error exists"<<" "<<spec->errorString();
+            return;
+        }
+        if(spec->state() != destState - 1){
+            qCWarning(logger_extension)<< "Plugin status error current status "<<spec->state()<<" target state "<<destState;
+            return;
+        }
         switch (destState)
         {
         case QtExtensionSystemPluginSpec::Loaded:
@@ -341,8 +365,7 @@ namespace Plugin {
         while (!_delayedInitializeQueue.isEmpty()) {
             QtExtensionSystemPluginSpec *spec = _delayedInitializeQueue.front();
             _delayedInitializeQueue.pop_front();
-            bool delay = spec->d_ptr->delayedInitialize();
-            if (delay)
+            if (spec->d_ptr->delayedInitialize())
                 break;
         }
         if (_delayedInitializeQueue.isEmpty()) {

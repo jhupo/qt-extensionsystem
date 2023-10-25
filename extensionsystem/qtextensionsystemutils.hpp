@@ -4,6 +4,8 @@
 #include <QEventLoop>
 #include <QString>
 #include <QTimer>
+#include <QElapsedTimer>
+#include <QCoreApplication>
 
 class QWidget;
 
@@ -14,6 +16,15 @@ namespace Utils {
         QEventLoop loop;
         QTimer::singleShot(msec,&loop,SLOT(quit()));
         loop.exec();
+    }
+
+    inline void sleep_v2(int msec)
+    {
+        QElapsedTimer timer;
+        timer.start();
+        while(timer.elapsed() < msec){
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        }
     }
 
     namespace ID {

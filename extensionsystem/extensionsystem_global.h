@@ -17,4 +17,5 @@
 #define qCInfo qCCritical
 #endif
 Q_DECLARE_LOGGING_CATEGORY(logger_extension)
+Q_DECLARE_LOGGING_CATEGORY(logger_event)
 #endif

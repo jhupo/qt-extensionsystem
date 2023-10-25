@@ -1,5 +1,4 @@
 include($$top_libsdir/library.pri)
-#include($$top_srcdir/copyright.pri)
 
 QT                      +=              core
 CONFIG                  +=              shared

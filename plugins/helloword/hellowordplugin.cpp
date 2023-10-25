@@ -13,14 +13,14 @@ namespace HelloWord {
 
     HelloWordPlugin::~HelloWordPlugin()
     {
-        if(_widget)
-            delete _widget;
+
     }
 
     bool HelloWordPlugin::initialize()
     {
         _widget = new QWidget;
-        _widget->resize(400,600);
+        _widget->resize(800,400);
+        addAutoReleasedObject(_widget);
         return true;
     }
 

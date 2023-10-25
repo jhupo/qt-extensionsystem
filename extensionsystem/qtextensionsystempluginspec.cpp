@@ -55,8 +55,10 @@ namespace Plugin{
            qCCritical(logger_extension) << "Cannot open file";
            return false;
         }
-        if (!readMetaData(_loader.metaData()))
+        if (!readMetaData(_loader.metaData())){
+            qCWarning(logger_extension) << _errorString;
             return false;
+        }
         _state = QtExtensionSystemPluginSpec::Read;
         qCInfo(logger_extension)<<_pluginName<<" Read successful";
         return true;
